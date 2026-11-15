@@ -9,6 +9,7 @@ import (
 	"astronaut-health-intelligence/astronauts"
 	"astronaut-health-intelligence/database"
 	"astronaut-health-intelligence/health"
+	"astronaut-health-intelligence/intelligence"
 )
 
 type HealthResponse struct {
@@ -41,21 +42,28 @@ func healthHandler(db *sql.DB) http.HandlerFunc {
 }
 
 func main() {
-    // Call InitDB() instead of Initialize()
-    database.InitDB()
-    defer database.DB.Close()
+	// Call InitDB() to initialize the database
+	database.InitDB()
+	defer database.DB.Close()
 
-    mux := http.NewServeMux()
+	mux := http.NewServeMux()
 
-    mux.HandleFunc("/api/health", healthHandler(database.DB))
-    mux.HandleFunc("/api/astronauts", astronauts.RegistrationHandler(database.DB))
+	// Register health check route
+	mux.HandleFunc("/api/health", healthHandler(database.DB))
 
-    // Register telemetry ingestion route
-    health.RegisterHandlers(mux)
+	// Register telemetry ingestion routes
+	health.RegisterHandlers(mux)
 
-    log.Println("Astronaut Health Intelligence API running on :8080")
+	// Astronaut registration endpoint with intelligence client
+	intelligenceClient := intelligence.NewClientFromEnv()
+	mux.HandleFunc(
+		"/api/astronauts",
+		astronauts.RegistrationHandler(database.DB, intelligenceClient),
+	)
 
-    if err := http.ListenAndServe(":8080", mux); err != nil {
-        log.Fatal("Server failed:", err)
-    }
+	log.Println("Astronaut Health Intelligence API running on :8080")
+
+	if err := http.ListenAndServe(":8080", mux); err != nil {
+		log.Fatal("Server failed:", err)
+	}
 }
