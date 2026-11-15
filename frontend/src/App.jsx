@@ -15,7 +15,7 @@ export default function App() {
     let isMounted = true;
     const fetchTelemetry = async () => {
       try {
-        const res = await fetch('/api/telemetry/latest'); // or your health/telemetry endpoint
+        const res = await fetch('http://localhost:8080/api/telemetry'); // or your health/telemetry endpoint
         if (!res.ok) throw new Error('Failed to fetch telemetry');
         const data = await res.json();
         if (isMounted) {
