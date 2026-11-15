@@ -4,17 +4,24 @@ import (
 	"database/sql"
 	"encoding/json"
 	"io"
+	"log"
 	"net/http"
 	"strings"
+
+	"astronaut-health-intelligence/intelligence"
 )
 
 type RegistrationResponse struct {
-	Message     string `json:"message"`
-	AstronautID string `json:"astronaut_id"`
-	ID          int64  `json:"id"`
+	Message          string `json:"message"`
+	AstronautID      string `json:"astronaut_id"`
+	ID               int64  `json:"id"`
+	IntelligenceSync string `json:"intelligence_sync"`
 }
 
-func RegistrationHandler(db *sql.DB) http.HandlerFunc {
+func RegistrationHandler(
+	db *sql.DB,
+	intelligenceClients ...*intelligence.Client,
+) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		if r.Method != http.MethodPost {
@@ -61,14 +68,43 @@ func RegistrationHandler(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
+		syncStatus := "not_configured"
+		if len(intelligenceClients) > 0 && intelligenceClients[0] != nil {
+			payload := intelligence.NewRegistrationPayload(
+				request.Personal.AstronautID,
+				intelligence.RegistrationHealth{
+					RestingHeartRate: request.Health.RestingHeartRate,
+					SystolicBP:       float64(request.Health.SystolicBP),
+					DiastolicBP:      float64(request.Health.DiastolicBP),
+					OxygenSaturation: request.Health.OxygenSaturation,
+					BodyTemperature:  request.Health.BodyTemperature,
+				},
+			)
+
+			if err := intelligenceClients[0].SyncRegistration(
+				r.Context(),
+				payload,
+			); err != nil {
+				log.Printf(
+					"Intelligence registration sync failed for %s: %v",
+					request.Personal.AstronautID,
+					err,
+				)
+				syncStatus = "failed"
+			} else {
+				syncStatus = "synced"
+			}
+		}
+
 		// Return success response.
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
 
 		json.NewEncoder(w).Encode(RegistrationResponse{
-			Message:     "Astronaut registered successfully",
-			AstronautID: request.Personal.AstronautID,
-			ID:          id,
+			Message:          "Astronaut registered successfully",
+			AstronautID:      request.Personal.AstronautID,
+			ID:               id,
+			IntelligenceSync: syncStatus,
 		})
 	}
 }
