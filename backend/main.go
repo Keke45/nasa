@@ -42,25 +42,23 @@ func healthHandler(db *sql.DB) http.HandlerFunc {
 }
 
 func main() {
-	db, err := database.Initialize()
-	if err != nil {
-		log.Fatal("Database initialization failed:", err)
-	}
-	defer db.Close()
+	// Call InitDB() to initialize the database
+	database.InitDB()
+	defer database.DB.Close()
 
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/api/health", healthHandler(db))
+	// Register health check route
+	mux.HandleFunc("/api/health", healthHandler(database.DB))
 
-	// Telemetry ingestion endpoint.
-	database.InitDB()
+	// Register telemetry ingestion routes
 	health.RegisterHandlers(mux)
 
-	// Astronaut registration endpoint.
+	// Astronaut registration endpoint with intelligence client
 	intelligenceClient := intelligence.NewClientFromEnv()
 	mux.HandleFunc(
 		"/api/astronauts",
-		astronauts.RegistrationHandler(db, intelligenceClient),
+		astronauts.RegistrationHandler(database.DB, intelligenceClient),
 	)
 
 	log.Println("Astronaut Health Intelligence API running on :8080")
