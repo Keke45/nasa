@@ -1,1 +1,61 @@
+package health
 
+import (
+    "encoding/json"
+    "net/http"
+    "time"
+
+    "your_project_name/backend/database" // Update with your actual go.mod module name
+)
+
+func RegisterHandlers(mux *http.ServeMux) {
+    mux.HandleFunc("/api/telemetry", handleTelemetrySubmission)
+}
+
+func handleTelemetrySubmission(w http.ResponseWriter, r *http.Request) {
+    if r.Method != http.MethodPost {
+        http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+        return
+    }
+
+    var reading HealthReading
+    err := json.NewDecoder(r.Body).Decode(&reading)
+    if err != nil {
+        http.Error(w, "Invalid JSON payload", http.StatusBadRequest)
+        return
+    }
+
+    // Assign ID and timestamp if missing
+    if reading.ID == "" {
+        reading.ID = time.Now().Format("20060102150405") + "-rec"
+    }
+    if reading.RecordedAt.IsZero() {
+        reading.RecordedAt = time.Now()
+    }
+
+    // Validate data
+    if err := reading.Validate(); err != nil {
+        http.Error(w, err.Error(), http.StatusBadRequest)
+        return
+    }
+
+    // Insert into SQLite
+    query := `
+    INSERT INTO HealthReadings (id, astronaut_id, heart_rate, systolic_bp, diastolic_bp, body_temperature, oxygen_saturation, sleep_duration, physical_activity, fatigue_level, source, recorded_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+
+    _, err = database.DB.Exec(query,
+        reading.ID, reading.AstronautID, reading.HeartRate, reading.SystolicBP, reading.DiastolicBP,
+        reading.BodyTemp, reading.OxygenSaturation, reading.SleepDuration, reading.PhysicalActivity,
+        reading.FatigueLevel, reading.Source, reading.RecordedAt,
+    )
+
+    if err != nil {
+        http.Error(w, "Database write error", http.StatusInternalServerError)
+        return
+    }
+
+    w.Header().Set("Content-Type", "application/json")
+    w.WriteHeader(http.StatusCreated)
+    json.NewEncoder(w).Encode(map[string]string{"status": "success", "message": "Telemetry reading stored successfully"})
+}
