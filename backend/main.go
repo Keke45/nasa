@@ -2,13 +2,14 @@
 package main
 
 import (
-	"database/sql"
-	"encoding/json"
-	"log"
-	"net/http"
+    "database/sql"
+    "encoding/json"
+    "log"
+    "net/http"
 
-	"astronaut-health-intelligence/database"
-	"astronaut-health-intelligence/astronauts"
+    "astronaut-health-intelligence/astronauts"
+    "astronaut-health-intelligence/database"
+    "astronaut-health-intelligence/health"
 )
 
 type HealthResponse struct {
@@ -51,8 +52,9 @@ func main() {
 
 	mux.HandleFunc("/api/health", healthHandler(db))
 
-	// Astronaut registration endpoint.
-	mux.HandleFunc("/api/astronauts", astronauts.RegistrationHandler(db))
+	mux.HandleFunc("/api/astronauts", astronauts.AstronautsCollectionHandler(db))
+
+	mux.HandleFunc("/api/health-profiles", health.ListHealthProfilesHandler(db))
 
 	log.Println("Astronaut Health Intelligence API running on :8080")
 

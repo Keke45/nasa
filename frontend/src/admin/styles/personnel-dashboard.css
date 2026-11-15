@@ -1,0 +1,375 @@
+/* ================================
+   DASHBOARD FOUNDATION
+================================ */
+
+.personnel-dashboard {
+  width: 100%;
+  min-height: 100vh;
+  padding: 38px 42px;
+  color: #193640;
+}
+
+
+/* ================================
+   DASHBOARD HEADER
+================================ */
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 38px;
+}
+
+.dashboard-eyebrow {
+  display: inline-block;
+  color: #168c91;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  margin-bottom: 12px;
+}
+
+.dashboard-header h1 {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 750;
+  color: #193640;
+}
+
+.dashboard-header p {
+  margin-top: 9px;
+  color: #6a8088;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.dashboard-date {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 7px;
+  padding: 14px 18px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 5px 18px rgba(25, 54, 64, 0.04);
+}
+
+.dashboard-date span {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #168c91;
+}
+
+.dashboard-date strong {
+  font-size: 13px;
+  color: #193640;
+}
+
+
+/* ================================
+   SECTION HEADING
+================================ */
+
+.dashboard-overview {
+  width: 100%;
+}
+
+.dashboard-section-heading {
+  margin-bottom: 20px;
+}
+
+.dashboard-section-heading h2 {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 750;
+  color: #193640;
+}
+
+.dashboard-section-heading p {
+  margin-top: 6px;
+  font-size: 13px;
+  color: #71868d;
+}
+
+
+/* ================================
+   OVERVIEW CARDS
+================================ */
+
+.overview-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.overview-card {
+  position: relative;
+  min-width: 0;
+  padding: 23px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  box-shadow: 0 8px 24px rgba(25, 54, 64, 0.045);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.overview-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(25, 54, 64, 0.08);
+}
+
+.overview-card.primary {
+  border-left: 4px solid #168c91;
+}
+
+.overview-card.secondary {
+  border-left: 4px solid #cbdcde;
+}
+
+.overview-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 25px;
+}
+
+.overview-icon {
+  display: grid;
+  place-items: center;
+  width: 43px;
+  height: 43px;
+  flex-shrink: 0;
+  border-radius: 13px;
+  background: #e5f3f2;
+  color: #168c91;
+  font-size: 22px;
+}
+
+.secondary .overview-icon {
+  background: #edf2f5;
+  color: #637d89;
+}
+
+.overview-status {
+  font-size: 10px;
+  font-weight: 700;
+  color: #168c91;
+  background: #e9f6f4;
+  padding: 6px 9px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.secondary .overview-status {
+  color: #71838b;
+  background: #f0f3f5;
+}
+
+.overview-card-content p {
+  margin: 0 0 9px;
+  color: #627982;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.overview-card-content h3 {
+  margin: 0;
+  color: #193640;
+  font-size: 32px;
+  font-weight: 800;
+}
+
+.overview-card-content > span {
+  display: block;
+  margin-top: 8px;
+  color: #87989e;
+  font-size: 11px;
+}
+
+
+/* ================================
+   ERROR MESSAGE
+================================ */
+
+.dashboard-error {
+  margin-bottom: 24px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  background: #fff0ef;
+  border: 1px solid #f5ceca;
+  color: #a83d36;
+  font-size: 13px;
+}
+
+
+/* ================================
+   TABLET RESPONSIVENESS
+================================ */
+
+@media (max-width: 1024px) {
+
+  .personnel-dashboard {
+    padding: 32px 28px;
+  }
+
+  .overview-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+}
+
+
+/* ================================
+   MOBILE RESPONSIVENESS
+================================ */
+
+@media (max-width: 700px) {
+
+  .personnel-dashboard {
+    padding: 25px 18px;
+  }
+
+  .dashboard-header {
+    align-items: flex-start;
+    flex-direction: column;
+    margin-bottom: 30px;
+  }
+
+  .dashboard-header h1 {
+    font-size: 25px;
+  }
+
+  .dashboard-date {
+    align-items: flex-start;
+  }
+
+  .overview-grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  .overview-card {
+    padding: 20px;
+  }
+
+}
+
+/* ================================
+   PERSONNEL OVERVIEW
+================================ */
+
+.personnel-overview-section {
+  margin-top: 35px;
+  width: 100%;
+}
+
+.personnel-overview-section .dashboard-section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+}
+
+.view-all-button {
+  border: none;
+  background: transparent;
+  color: #168c91;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 9px 12px;
+  border-radius: 8px;
+}
+
+.view-all-button:hover {
+  background: #e5f3f2;
+}
+
+.personnel-table-container {
+  width: 100%;
+  overflow-x: auto;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(25, 54, 64, 0.045);
+}
+
+.personnel-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  min-width: 650px;
+}
+
+.personnel-table th {
+  padding: 17px 20px;
+  color: #71868d;
+  font-size: 11px;
+  font-weight: 700;
+  background: #f8fafc;
+  border-bottom: 1px solid #e9eff1;
+}
+
+.personnel-table td {
+  padding: 17px 20px;
+  font-size: 12px;
+  color: #536e76;
+  border-bottom: 1px solid #edf1f2;
+}
+
+.personnel-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.personnel-table tbody tr:hover {
+  background: #f8fbfb;
+}
+
+.personnel-name strong {
+  color: #193640;
+  font-size: 13px;
+}
+
+.personnel-view-button {
+  border: none;
+  background: #e5f3f2;
+  color: #168c91;
+  padding: 7px 13px;
+  border-radius: 7px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.personnel-view-button:hover {
+  background: #168c91;
+  color: white;
+}
+
+.personnel-empty-state {
+  padding: 35px 20px;
+  text-align: center;
+  color: #71868d;
+  font-size: 13px;
+}
+
+
+/* Mobile adjustments */
+
+@media (max-width: 700px) {
+
+  .personnel-overview-section {
+    margin-top: 28px;
+  }
+
+  .personnel-overview-section .dashboard-section-heading {
+    align-items: flex-start;
+  }
+
+}
+

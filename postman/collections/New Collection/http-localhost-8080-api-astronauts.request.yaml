@@ -1,0 +1,67 @@
+$kind: http-request
+name: http://localhost:8080/api/astronauts
+description: |-
+  Generated from cURL: curl -X POST http://localhost:8080/api/astronauts \
+  -H "Content-Type: application/json" \
+  -d '{
+    "personal": {
+      "astronaut_id": "AST-001",
+      "full_name": "Alex Morgan",
+      "date_of_birth": "1995-04-12",
+      "nationality": "American"
+    },
+    "mission": {
+      "mission_name": "Artemis",
+      "mission_role": "Mission Specialist",
+      "start_date": "2026-12-01",
+      "expected_return_date": "2027-06-01"
+    },
+    "health": {
+      "height_cm": 175,
+      "weight_kg": 72,
+      "resting_heart_rate": 65,
+      "systolic_bp": 120,
+      "diastolic_bp": 80,
+      "oxygen_saturation": 98,
+      "body_temperature": 36.8
+    },
+    "account": {
+      "username": "alex",
+      "initial_password": "password123"
+    }
+  }'
+url: "{{baseUrl}}/api/astronauts"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "personal": {
+        "astronaut_id": "AST-001",
+        "full_name": "Alex Morgan",
+        "date_of_birth": "1995-04-12",
+        "nationality": "American"
+      },
+      "mission": {
+        "mission_name": "Artemis",
+        "mission_role": "Mission Specialist",
+        "start_date": "2026-12-01",
+        "expected_return_date": "2027-06-01"
+      },
+      "health": {
+        "height_cm": 175,
+        "weight_kg": 72,
+        "resting_heart_rate": 65,
+        "systolic_bp": 120,
+        "diastolic_bp": 80,
+        "oxygen_saturation": 98,
+        "body_temperature": 36.8
+      },
+      "account": {
+        "username": "alex",
+        "initial_password": "password123"
+      }
+    }
+order: 1000

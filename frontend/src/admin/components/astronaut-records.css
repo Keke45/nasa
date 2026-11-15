@@ -1,0 +1,261 @@
+.records-page {
+  padding: 32px;
+  min-height: 100vh;
+  background: #f4f8fc;
+  color: #203047;
+}
+
+.records-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.records-label {
+  color: #168c91;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  margin-bottom: 8px;
+}
+
+.records-header h1 {
+  font-size: 30px;
+  margin: 0 0 8px;
+}
+
+.records-description {
+  color: #64748b;
+  margin: 0;
+}
+
+.refresh-button {
+  background: #168c91;
+  color: white;
+  border: none;
+  padding: 12px 18px;
+  border-radius: 9px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.refresh-button:hover {
+  background: #11767a;
+}
+
+.refresh-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.records-summary {
+  margin-bottom: 25px;
+}
+
+.summary-card {
+  background: white;
+  padding: 22px;
+  border-radius: 12px;
+  border: 1px solid #e2eaf2;
+  max-width: 280px;
+}
+
+.summary-card span {
+  color: #64748b;
+  font-size: 14px;
+}
+
+.summary-card h2 {
+  font-size: 32px;
+  margin: 10px 0 0;
+  color: #168c91;
+}
+
+.records-table-container {
+  background: white;
+  border-radius: 14px;
+  border: 1px solid #e2eaf2;
+  overflow: hidden;
+}
+
+.table-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 22px;
+  border-bottom: 1px solid #e9eef5;
+}
+
+.table-heading h2 {
+  font-size: 18px;
+  margin: 0;
+}
+
+.table-heading span {
+  color: #64748b;
+  font-size: 13px;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+.astronaut-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.astronaut-table th,
+.astronaut-table td {
+  padding: 17px 22px;
+  border-bottom: 1px solid #edf1f6;
+  white-space: nowrap;
+}
+
+.astronaut-table th {
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.astronaut-table td {
+  font-size: 14px;
+  color: #334155;
+}
+
+.astronaut-table tbody tr:hover {
+  background: #f5fbfb;
+}
+
+.astronaut-id {
+  color: #168c91 !important;
+  font-weight: 700;
+}
+
+.records-message,
+.records-error {
+  padding: 35px;
+  text-align: center;
+  color: #64748b;
+}
+
+.records-error {
+  color: #dc2626;
+}
+
+@media (max-width: 768px) {
+  .records-page {
+    padding: 20px;
+  }
+
+  .records-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .records-header h1 {
+    font-size: 25px;
+  }
+}
+
+/* Search and filtering controls */
+
+.records-filters {
+  display: flex;
+  align-items: flex-end;
+  gap: 15px;
+  padding: 18px 22px;
+  border-bottom: 1px solid #e9eef5;
+}
+
+.search-container {
+  flex: 1;
+}
+
+.nationality-filter {
+  width: 220px;
+}
+
+.search-container label,
+.nationality-filter label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.search-input-wrapper {
+  position: relative;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+}
+
+.search-input-wrapper input,
+.nationality-filter select {
+  width: 100%;
+  height: 42px;
+  box-sizing: border-box;
+  border: 1px solid #e2eaf2;
+  border-radius: 8px;
+  background: white;
+  color: #334155;
+  font-size: 13px;
+}
+
+.search-input-wrapper input {
+  padding: 0 12px 0 35px;
+}
+
+.nationality-filter select {
+  padding: 0 12px;
+}
+
+.search-input-wrapper input:focus,
+.nationality-filter select:focus {
+  outline: none;
+  border-color: #168c91;
+}
+
+.clear-filters-button {
+  height: 42px;
+  padding: 0 13px;
+  border: 1px solid #e2eaf2;
+  border-radius: 8px;
+  background: white;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.clear-filters-button:hover {
+  border-color: #168c91;
+  color: #168c91;
+}
+
+@media (max-width: 768px) {
+  .records-filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .nationality-filter {
+    width: 100%;
+  }
+
+  .clear-filters-button {
+    align-self: flex-start;
+  }
+}

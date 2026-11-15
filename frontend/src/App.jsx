@@ -1,39 +1,108 @@
-import { useEffect, useState } from 'react'
-import { checkServerHealth } from './services/api'
+import { useEffect, useState } from "react";
+import { checkServerHealth } from "./services/api";
+import AstronautRegistration from "./admin/components/AstronautRegistration";
+import AstronautRecords from "./admin/components/AstronautRecords";
+import PersonnelDashboard from "./admin/components/PersonnelDashboard";
+import CrewHealthMonitoring from "./admin/components/CrewHealthMonitoring";
+import "./App.css";
 
 function App() {
-  const [health, setHealth] = useState(null)
-  const [error, setError] = useState('')
+  const [health, setHealth] = useState(null);
+  const [activePage, setActivePage] = useState("register");
 
   useEffect(() => {
     async function fetchHealth() {
       try {
-        const data = await checkServerHealth()
-        setHealth(data)
-      } catch (err) {
-        setError(err.message)
+        const data = await checkServerHealth();
+        setHealth(data);
+      } catch {
+        setHealth(null);
       }
     }
 
-    fetchHealth()
-  }, [])
+    fetchHealth();
+  }, []);
 
   return (
-    <main>
-      <h1>Astronaut Health Intelligence</h1>
+    <div className="app-layout">
+      {/* Sidebar */}
+      <aside className="sidebar">
+        <div className="sidebar-brand">
+          <div className="brand-icon">A</div>
 
-      <h2>System Status</h2>
-
-      {health && (
-        <div>
-          <p>Backend: {health.status}</p>
-          <p>Database: {health.database}</p>
+          <div>
+            <h2>ASTRA</h2>
+            <span>MISSION SYSTEM</span>
+          </div>
         </div>
-      )}
 
-      {error && <p>{error}</p>}
-    </main>
-  )
+        <div className="sidebar-section">
+          <p className="sidebar-heading">PERSONNEL MANAGEMENT</p>
+
+          <button
+            className={`sidebar-link ${activePage === "dashboard" ? "active" : ""}`}
+            onClick={() => setActivePage("dashboard")}
+          >
+            <span className="nav-icon">▦</span>
+            <span>Dashboard</span>
+          </button>
+
+          <button
+            className={`sidebar-link ${activePage === "register" ? "active" : ""}`}
+            onClick={() => setActivePage("register")}
+          >
+            <span className="nav-icon">＋</span>
+            <span>Register Astronaut</span>
+          </button>
+
+          <button
+            className={`sidebar-link ${activePage === "records" ? "active" : ""}`}
+            onClick={() => setActivePage("records")}
+          >
+            <span className="nav-icon">▤</span>
+            <span>Astronaut Records</span>
+          </button>
+        </div>
+
+        <div className="sidebar-section">
+          <p className="sidebar-heading">HEALTH MANAGEMENT</p>
+
+          <button
+            className={`sidebar-link ${activePage === "health" ? "active" : ""}`}
+            onClick={() => setActivePage("health")}
+          >
+            <span className="nav-icon">♡</span>
+            <span>Crew Health Monitoring</span>
+          </button>
+        </div>
+
+        <div className="sidebar-footer">
+          <div
+            className={`connection-indicator ${health ? "connected" : "disconnected"}`}
+          ></div>
+
+          <div>
+            <strong>System Status</strong>
+            <span>
+              {health ? "Server Connected" : "Connection Unavailable"}
+            </span>
+          </div>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <main className="main-content">
+        {activePage === "dashboard" && (
+          <PersonnelDashboard onViewRecords={() => setActivePage("records")} />
+        )}
+        {activePage === "register" && <AstronautRegistration />}
+
+        {activePage === "records" && <AstronautRecords />}
+
+        {activePage === "health" && <CrewHealthMonitoring />}
+      </main>
+    </div>
+  );
 }
 
-export default App
+export default App;
