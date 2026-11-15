@@ -1,4 +1,3 @@
-
 package main
 
 import (
@@ -7,8 +6,10 @@ import (
 	"log"
 	"net/http"
 
-	"astronaut-health-intelligence/database"
 	"astronaut-health-intelligence/astronauts"
+	"astronaut-health-intelligence/database"
+	"astronaut-health-intelligence/health"
+	"astronaut-health-intelligence/intelligence"
 )
 
 type HealthResponse struct {
@@ -51,8 +52,16 @@ func main() {
 
 	mux.HandleFunc("/api/health", healthHandler(db))
 
+	// Telemetry ingestion endpoint.
+	database.InitDB()
+	health.RegisterHandlers(mux)
+
 	// Astronaut registration endpoint.
-	mux.HandleFunc("/api/astronauts", astronauts.RegistrationHandler(db))
+	intelligenceClient := intelligence.NewClientFromEnv()
+	mux.HandleFunc(
+		"/api/astronauts",
+		astronauts.RegistrationHandler(db, intelligenceClient),
+	)
 
 	log.Println("Astronaut Health Intelligence API running on :8080")
 

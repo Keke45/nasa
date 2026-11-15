@@ -4,14 +4,14 @@ import (
     "database/sql"
     "log"
 
-    _ "github.com/mattn/go-sqlite3"
+    _ "modernc.org/sqlite"
 )
 
 var DB *sql.DB
 
 func InitDB() {
     var err error
-    DB, err = sql.Open("sqlite3", "./astronaut_health.db")
+    DB, err = sql.Open("sqlite", "./astronaut_health.db")
     if err != nil {
         log.Fatalf("Failed to connect to database: %v", err)
     }
