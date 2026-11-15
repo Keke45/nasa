@@ -14,6 +14,16 @@ urlpatterns = [
         name="registration-intake",
     ),
     path(
+        "mission/overview",
+        views.MissionOverviewView.as_view(),
+        name="mission-overview",
+    ),
+    path(
+        "mission/alerts",
+        views.MissionAlertsView.as_view(),
+        name="mission-alerts",
+    ),
+    path(
         "readings/<str:astronaut_id>",
         views.ReadingListView.as_view(),
         name="reading-list",

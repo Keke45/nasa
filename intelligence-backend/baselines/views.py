@@ -1,9 +1,12 @@
 """REST API for reading ingestion and personal baselines."""
 
+import logging
 import secrets
 
 from django.conf import settings
 from django.db import transaction
+from django.db.models import Count, Max, Min
+from django.utils import timezone
 from rest_framework import serializers, status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -34,6 +37,20 @@ from services.constants import (
     STATUS_INSUFFICIENT,
 )
 from services.statistical_service import analyze_statistics
+
+logger = logging.getLogger(__name__)
+
+DASHBOARD_SEVERITIES = [
+    "SEVERE",
+    "ANOMALY",
+    "WATCH",
+    "NORMAL",
+    "NOT_EVALUATED",
+]
+DASHBOARD_SEVERITY_RANK = {
+    severity: len(DASHBOARD_SEVERITIES) - index
+    for index, severity in enumerate(DASHBOARD_SEVERITIES)
+}
 
 
 class PublicAPIView(APIView):
@@ -500,3 +517,324 @@ class StatisticalAnalysisView(PublicAPIView):
             )
 
         return Response(result)
+
+
+def _iso(value):
+    return value.isoformat() if value is not None else None
+
+
+def _dashboard_reading_payload(reading):
+    if reading is None:
+        return None
+
+    return {
+        "id": reading.id,
+        "recorded_at": _iso(reading.recorded_at),
+        "source": reading.source,
+        "values": {
+            metric: getattr(reading, metric)
+            for metric in METRIC_COLUMNS
+        },
+    }
+
+
+def _compact_alert(item, astronaut_id, recorded_at, baseline_version):
+    return {
+        "astronaut_id": str(astronaut_id),
+        "recorded_at": recorded_at,
+        "metric": item.get("metric"),
+        "metric_label": item.get("metric_label") or item.get("metric"),
+        "unit": item.get("unit") or "",
+        "severity": item.get("severity"),
+        "current_value": item.get("current_value"),
+        "baseline_value": item.get("baseline_value"),
+        "z_score": item.get("z_score"),
+        "direction": item.get("direction"),
+        "difference": item.get("difference"),
+        "baseline_status": item.get("baseline_status"),
+        "baseline_version": (
+            item.get("baseline_version") or baseline_version
+        ),
+        "outside_observed_range": bool(
+            item.get("outside_observed_range")
+        ),
+        "reason": item.get("reason") or "",
+    }
+
+
+def _alert_observation(alert):
+    if alert["reason"]:
+        return alert["reason"]
+
+    label = alert["metric_label"] or alert["metric"] or "Measurement"
+    direction = alert["direction"]
+    difference = alert["difference"]
+    unit = alert["unit"]
+
+    if difference is not None and direction in {"ABOVE", "BELOW"}:
+        amount = f"{abs(float(difference)):.1f}"
+        measure = f"{amount} {unit}" if unit else amount
+        return (
+            f"{label} is {measure} {direction.lower()} the "
+            "personal baseline."
+        )
+
+    return f"{label} deviates from the personal baseline."
+
+
+def _contributing_factors(alert, alerts, trends):
+    factors = []
+
+    for other in alerts:
+        if other["metric"] == alert["metric"]:
+            continue
+        direction = (other.get("direction") or "").lower()
+        label = other.get("metric_label") or other.get("metric")
+        factors.append(
+            f"{label} {direction} baseline".strip()
+        )
+
+    for trend in trends.values():
+        direction = trend.get("direction")
+        if direction in {None, "STABLE"}:
+            continue
+        factors.append(
+            f"{trend.get('metric_label')} trending "
+            f"{str(direction).lower()}"
+        )
+
+    unique = []
+    for factor in factors:
+        if factor not in unique:
+            unique.append(factor)
+
+    return unique[:4]
+
+
+def _dashboard_entry(stats):
+    astronaut_id = stats["astronaut_id"]
+    latest_payload = None
+    analysis = None
+    error_message = None
+
+    try:
+        analysis = analyze_statistics(astronaut_id)
+    except Exception as error:
+        logger.exception(
+            "Mission overview analysis failed for %s", astronaut_id
+        )
+        error_message = str(error)
+        latest = (
+            HealthReading.objects
+            .filter(astronaut_id=astronaut_id)
+            .order_by("-recorded_at")
+            .first()
+        )
+        latest_payload = _dashboard_reading_payload(latest)
+
+    if analysis is not None:
+        latest_payload = analysis.get("reading")
+        summary = analysis.get("summary") or {}
+        anomaly_summary = summary.get("anomaly") or {}
+        ml_summary = summary.get("ml_anomaly") or {}
+        baseline = analysis.get("baseline") or {}
+        recorded_at = (latest_payload or {}).get("recorded_at")
+        baseline_version = baseline.get("version")
+
+        alerts = [
+            _compact_alert(
+                item, astronaut_id, recorded_at, baseline_version
+            )
+            for item in (analysis.get("anomalies") or [])
+            if item.get("evaluated")
+            and item.get("severity")
+            not in {None, "NORMAL", "NOT_EVALUATED"}
+        ]
+
+        trends = {
+            metric: {
+                "metric": metric,
+                "metric_label": trend.get("metric_label") or metric,
+                "unit": trend.get("unit") or "",
+                "direction": trend.get("direction"),
+                "slope_per_week": trend.get("slope_per_week"),
+                "reliable": trend.get("reliable"),
+            }
+            for metric, trend in (analysis.get("trends") or {}).items()
+        }
+
+        severity = anomaly_summary.get("highest_severity")
+        severity = severity or "NOT_EVALUATED"
+
+        return {
+            "astronaut_id": str(astronaut_id),
+            "reading_count": stats["reading_count"],
+            "first_reading_at": _iso(stats["first_reading_at"]),
+            "last_reading_at": _iso(stats["last_reading_at"]),
+            "latest_reading": latest_payload,
+            "baseline": {
+                "snapshot_id": baseline.get("snapshot_id"),
+                "version": baseline_version,
+                "kind": baseline.get("kind"),
+                "window_days": baseline.get("window_days"),
+                "usable_count": baseline.get("usable_count"),
+                "metric_count": baseline.get("metric_count"),
+            },
+            "severity": severity,
+            "alert_count": anomaly_summary.get("alert_count", 0),
+            "requires_review": bool(
+                summary.get("requires_review")
+            ),
+            "ml_status": ml_summary.get("status", "NOT_EVALUATED"),
+            "ml_anomaly": ml_summary,
+            "trend_directions": (
+                summary.get("trend_directions") or {}
+            ),
+            "trends": trends,
+            "alerts": alerts,
+            "warnings": analysis.get("warnings") or [],
+            "generated_at": analysis.get("generated_at"),
+            "error": None,
+        }
+
+    return {
+        "astronaut_id": str(astronaut_id),
+        "reading_count": stats["reading_count"],
+        "first_reading_at": _iso(stats["first_reading_at"]),
+        "last_reading_at": _iso(stats["last_reading_at"]),
+        "latest_reading": latest_payload,
+        "baseline": {
+            "snapshot_id": None,
+            "version": None,
+            "kind": None,
+            "window_days": None,
+            "usable_count": 0,
+            "metric_count": 0,
+        },
+        "severity": "NOT_EVALUATED",
+        "alert_count": 0,
+        "requires_review": False,
+        "ml_status": "NOT_EVALUATED",
+        "ml_anomaly": {},
+        "trend_directions": {},
+        "trends": {},
+        "alerts": [],
+        "warnings": [],
+        "generated_at": None,
+        "error": error_message,
+    }
+
+
+def _build_mission_overview():
+    stats_rows = list(
+        HealthReading.objects
+        .values("astronaut_id")
+        .annotate(
+            reading_count=Count("id"),
+            first_reading_at=Min("recorded_at"),
+            last_reading_at=Max("recorded_at"),
+        )
+        .order_by("astronaut_id")
+    )
+
+    astronauts = [_dashboard_entry(stats) for stats in stats_rows]
+
+    alerts = []
+    for entry in astronauts:
+        for alert in entry["alerts"]:
+            alert["observation"] = _alert_observation(alert)
+            alert["contributing_factors"] = _contributing_factors(
+                alert, entry["alerts"], entry["trends"]
+            )
+            alert["status"] = "NEW"
+            alert["recommended_actions"] = []
+            alerts.append(alert)
+
+    alerts.sort(
+        key=lambda item: item.get("recorded_at") or "",
+        reverse=True,
+    )
+    alerts.sort(
+        key=lambda item: DASHBOARD_SEVERITY_RANK.get(
+            item.get("severity"), 0
+        ),
+        reverse=True,
+    )
+
+    severity_counts = {
+        severity: 0 for severity in DASHBOARD_SEVERITIES
+    }
+    for entry in astronauts:
+        severity = entry["severity"]
+        if severity not in severity_counts:
+            severity = "NOT_EVALUATED"
+        severity_counts[severity] += 1
+
+    last_reading_at = max(
+        (
+            entry["last_reading_at"]
+            for entry in astronauts
+            if entry["last_reading_at"]
+        ),
+        default=None,
+    )
+
+    return {
+        "generated_at": timezone.now().isoformat(),
+        "summary": {
+            "total_astronauts": len(astronauts),
+            "monitored": len(astronauts),
+            "active_alerts": sum(
+                entry["alert_count"] for entry in astronauts
+            ),
+            "requiring_attention": sum(
+                1
+                for entry in astronauts
+                if entry["requires_review"]
+            ),
+            "severity_counts": severity_counts,
+            "last_reading_at": last_reading_at,
+        },
+        "astronauts": astronauts,
+        "alerts": alerts,
+    }
+
+
+class MissionOverviewView(PublicAPIView):
+    def get(self, request):
+        return Response(_build_mission_overview())
+
+
+class MissionAlertsView(PublicAPIView):
+    def get(self, request):
+        overview = _build_mission_overview()
+        alerts = overview["alerts"]
+
+        summary = {
+            "total": len(alerts),
+            "severe": sum(
+                1 for alert in alerts
+                if alert["severity"] == "SEVERE"
+            ),
+            "anomaly": sum(
+                1 for alert in alerts
+                if alert["severity"] == "ANOMALY"
+            ),
+            "watch": sum(
+                1 for alert in alerts
+                if alert["severity"] == "WATCH"
+            ),
+            "astronauts_affected": len({
+                alert["astronaut_id"] for alert in alerts
+            }),
+            "requiring_attention": sum(
+                1 for alert in alerts
+                if alert["severity"] in {"SEVERE", "ANOMALY"}
+            ),
+        }
+
+        return Response({
+            "generated_at": overview["generated_at"],
+            "summary": summary,
+            "alerts": alerts,
+        })
