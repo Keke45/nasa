@@ -1,15 +1,11 @@
 package main
 
 import (
-    "database/sql"
-    "encoding/json"
-    "log"
-    "net/http"
+	"database/sql"
+	"encoding/json"
+	"log"
+	"net/http"
 
-
-    "astronaut-health-intelligence/astronauts"
-    "astronaut-health-intelligence/database"
-    "astronaut-health-intelligence/health"
 	"astronaut-health-intelligence/astronauts"
 	"astronaut-health-intelligence/database"
 	"astronaut-health-intelligence/health"
@@ -46,30 +42,35 @@ func healthHandler(db *sql.DB) http.HandlerFunc {
 }
 
 func main() {
-	// Call InitDB() to initialize the database
-	database.InitDB()
+	// Open the shared database and ensure the full schema exists.
+	db, err := database.Initialize()
+	if err != nil {
+		log.Fatalf("Failed to initialize database: %v", err)
+	}
+	database.DB = db
 	defer database.DB.Close()
+
+	intelligenceClient := intelligence.NewClientFromEnv()
 
 	mux := http.NewServeMux()
 
 	// Register health check route
 	mux.HandleFunc("/api/health", healthHandler(database.DB))
 
+	// Astronaut collection: GET lists astronauts, POST registers one
+	mux.HandleFunc(
+		"/api/astronauts",
+		astronauts.AstronautsCollectionHandler(database.DB, intelligenceClient),
+	)
 
-	mux.HandleFunc("/api/astronauts", astronauts.AstronautsCollectionHandler(db))
-
-	mux.HandleFunc("/api/health-profiles", health.ListHealthProfilesHandler(db))
+	// Registered astronaut health profiles
+	mux.HandleFunc(
+		"/api/health-profiles",
+		health.ListHealthProfilesHandler(database.DB),
+	)
 
 	// Register telemetry ingestion routes
 	health.RegisterHandlers(mux)
-
-	// Astronaut registration endpoint with intelligence client
-	intelligenceClient := intelligence.NewClientFromEnv()
-	mux.HandleFunc(
-		"/api/astronauts",
-		astronauts.RegistrationHandler(database.DB, intelligenceClient),
-	)
-
 
 	log.Println("Astronaut Health Intelligence API running on :8080")
 

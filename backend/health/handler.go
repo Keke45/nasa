@@ -5,11 +5,7 @@ import (
 	"net/http"
 	"time"
 
-HEAD
-	"astronaut-health-intelligence/database" // Updated with your repository/module name from go.mod
-
 	"astronaut-health-intelligence/database"
- master
 )
 
 // RegisterHandlers registers the telemetry routes with CORS enabled
@@ -63,8 +59,8 @@ func handleTelemetrySubmission(w http.ResponseWriter, r *http.Request) {
 
 	// Insert into SQLite
 	query := `
-	INSERT INTO HealthReadings (id, astronaut_id, heart_rate, systolic_bp, diastolic_bp, body_temperature, oxygen_saturation, sleep_duration, physical_activity, fatigue_level, source, recorded_at)
-	VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    INSERT INTO HealthReadings (id, astronaut_id, heart_rate, systolic_bp, diastolic_bp, body_temperature, oxygen_saturation, sleep_duration, physical_activity, fatigue_level, source, recorded_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
 	_, err = database.DB.Exec(query,
 		reading.ID, reading.AstronautID, reading.HeartRate, reading.SystolicBP, reading.DiastolicBP,

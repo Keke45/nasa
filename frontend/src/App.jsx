@@ -1,13 +1,14 @@
-
 import { useEffect, useState } from "react";
 import { checkServerHealth } from "./services/api";
 import AstronautRegistration from "./admin/components/AstronautRegistration";
 import AstronautRecords from "./admin/components/AstronautRecords";
 import PersonnelDashboard from "./admin/components/PersonnelDashboard";
 import CrewHealthMonitoring from "./admin/components/CrewHealthMonitoring";
+import AstronautPortal from "./components/portal/AstronautPortal";
 import "./App.css";
+import "./portal.css";
 
-function App() {
+function AdminDashboard({ onOpenPortal }) {
   const [health, setHealth] = useState(null);
   const [activePage, setActivePage] = useState("register");
 
@@ -86,6 +87,15 @@ function App() {
           </button>
         </div>
 
+        <div className="sidebar-section">
+          <p className="sidebar-heading">CREW AREA</p>
+
+          <button className="sidebar-link" onClick={onOpenPortal}>
+            <span className="nav-icon">↗</span>
+            <span>Astronaut Portal</span>
+          </button>
+        </div>
+
         <div className="sidebar-footer">
           <div
             className={`connection-indicator ${health ? "connected" : "disconnected"}`}
@@ -112,11 +122,27 @@ function App() {
   );
 }
 
-export default App;
+function App() {
+  const [showPortal, setShowPortal] = useState(
+    () => new URLSearchParams(window.location.search).get("view") === "portal",
+  );
 
-import AstronautPortal from './components/portal/AstronautPortal'
-import './portal.css'
+  if (showPortal) {
+    return (
+      <div className="portal-view">
+        <button
+          className="portal-exit"
+          type="button"
+          onClick={() => setShowPortal(false)}
+        >
+          ← Admin dashboard
+        </button>
+        <AstronautPortal />
+      </div>
+    );
+  }
 
-export default function App() {
-  return <AstronautPortal />
+  return <AdminDashboard onOpenPortal={() => setShowPortal(true)} />;
 }
+
+export default App;

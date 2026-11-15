@@ -3,11 +3,16 @@ package astronauts
 import (
 	"database/sql"
 	"net/http"
+
+	"astronaut-health-intelligence/intelligence"
 )
 
-func AstronautsCollectionHandler(db *sql.DB) http.HandlerFunc {
+func AstronautsCollectionHandler(
+	db *sql.DB,
+	intelligenceClients ...*intelligence.Client,
+) http.HandlerFunc {
 	getHandler := ListAstronautsHandler(db)
-	postHandler := RegistrationHandler(db)
+	postHandler := RegistrationHandler(db, intelligenceClients...)
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
