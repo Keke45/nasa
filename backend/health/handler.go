@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"nasa/backend/database" // Updated with your repository/module name from go.mod
+	"astronaut-health-intelligence/database" // Updated with your repository/module name from go.mod
 )
 
 // RegisterHandlers registers the telemetry routes with CORS enabled
