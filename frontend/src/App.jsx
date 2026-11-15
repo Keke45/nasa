@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { checkServerHealth } from "./services/api";
 import AstronautRegistration from "./admin/components/AstronautRegistration";
@@ -11,21 +12,30 @@ function App() {
   const [activePage, setActivePage] = useState("register");
 
   useEffect(() => {
-    async function fetchHealth() {
+    let cancelled = false;
+
+    async function loadHealth() {
       try {
         const data = await checkServerHealth();
-        setHealth(data);
+        if (!cancelled) {
+          setHealth(data);
+        }
       } catch {
-        setHealth(null);
+        if (!cancelled) {
+          setHealth(null);
+        }
       }
     }
 
-    fetchHealth();
+    loadHealth();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return (
     <div className="app-layout">
-      {/* Sidebar */}
       <aside className="sidebar">
         <div className="sidebar-brand">
           <div className="brand-icon">A</div>
@@ -90,15 +100,12 @@ function App() {
         </div>
       </aside>
 
-      {/* Main Content */}
       <main className="main-content">
         {activePage === "dashboard" && (
           <PersonnelDashboard onViewRecords={() => setActivePage("records")} />
         )}
         {activePage === "register" && <AstronautRegistration />}
-
         {activePage === "records" && <AstronautRecords />}
-
         {activePage === "health" && <CrewHealthMonitoring />}
       </main>
     </div>
@@ -106,3 +113,4 @@ function App() {
 }
 
 export default App;
+
